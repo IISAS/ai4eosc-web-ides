@@ -1,0 +1,17 @@
+ARG TF_TAG=2.10.1-gpu-jupyter
+FROM tensorflow/tensorflow:${TF_TAG} as base
+
+ENV SHELL=/bin/bash
+RUN source /etc/bash.bashrc
+
+RUN apt-get update -y
+RUN apt-get install -y zip git graphviz vim
+
+RUN pip install --upgrade pip
+RUN pip install --upgrade setuptools
+
+WORKDIR /tf
+COPY requirements.txt requirements.txt
+RUN pip install -r requirements.txt
+
+CMD ["bash", "-c", "source /etc/bash.bashrc && jupyter lab --notebook-dir=/tf --ip 0.0.0.0 --no-browser --allow-root"]

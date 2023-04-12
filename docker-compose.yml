@@ -1,0 +1,78 @@
+version: "3.9"
+name: ai4eosc
+services:
+  vscode:
+    hostname: ${HOSTNAME:-localhost}
+    ipc: host
+    image: iisas/vscode:${VSCODE_TAG}-tf-${TF_TAG}
+    build:
+      context: .
+      args:
+        TF_TAG: ${TF_TAG}
+        VSCODE_TAG: ${VSCODE_TAG}
+      dockerfile: Dockerfile.vscode
+      tags:
+        - iisas/vscode:latest
+    ulimits:
+      memlock: -1
+      stack: 67108864
+    tty: true
+    environment:
+      - TF_FORCE_GPU_ALLOW_GROWTH=${TF_FORCE_GPU_ALLOW_GROWTH}
+      - TF_GPU_MEMORY_LIMIT=${TF_GPU_MEMORY_LIMIT}
+      - TF_GPU_ALLOCATOR=cuda_malloc_async
+    ports:
+      - "9090:8080"
+    volumes:
+      - tf:/tf
+      - ${PWD}/config:/root/.config
+    restart: always
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  jupyter_lab:
+    hostname: ${HOSTNAME:-localhost}
+    ipc: host
+    image: iisas/jupyter_lab:tf-${TF_TAG}
+    build:
+      context: .
+      args:
+        TF_TAG: ${TF_TAG}
+      dockerfile: Dockerfile.jupyter_lab
+      tags:
+        - iisas/jupyter_lab:latest
+    ulimits:
+      memlock: -1
+      stack: 67108864
+    tty: true
+    environment:
+      - TF_FORCE_GPU_ALLOW_GROWTH=${TF_FORCE_GPU_ALLOW_GROWTH}
+      - TF_GPU_MEMORY_LIMIT=${TF_GPU_MEMORY_LIMIT}
+      - TF_GPU_ALLOCATOR=cuda_malloc_async
+    ports:
+      - "9091:8888"
+    volumes:
+      - tf:/tf
+    restart: always
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+
+volumes:
+  tf:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ${PWD}/volumes/tf
+
