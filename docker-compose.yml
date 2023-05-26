@@ -23,6 +23,8 @@ services:
       - TF_GPU_ALLOCATOR=cuda_malloc_async
     ports:
       - "9090:8080"
+    networks:
+      - ai4eosc
     volumes:
       - tf:/tf
       - ${PWD}/config:/root/.config
@@ -56,8 +58,11 @@ services:
       - TF_GPU_ALLOCATOR=cuda_malloc_async
     ports:
       - "9091:8888"
+    networks:
+      - ai4eosc
     volumes:
       - tf:/tf
+      - ${PWD}/jupyter_lab_config.py:/root/.jupyter/jupyter_lab_config.py
     restart: always
     deploy:
       resources:
@@ -67,6 +72,9 @@ services:
               count: all
               capabilities: [gpu]
 
+networks:
+  ai4eosc:
+    external: true
 
 volumes:
   tf:
